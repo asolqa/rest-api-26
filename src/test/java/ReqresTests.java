@@ -70,7 +70,7 @@ public class ReqresTests {
     @Test
     @DisplayName("Verify only predefined users can pass the registration")
     void unsuccessfulRegistrationTest() {
-        String regData = String.format(regDataTemplate,"test.test@reqres.in","testpswd");
+        String regData = String.format(regDataTemplate, "test.test@reqres.in", "testpswd");
 
         given()
                 .body(regData)
@@ -84,7 +84,7 @@ public class ReqresTests {
                 .log().status()
                 .log().body()
                 .statusCode(400)
-                .body("error", is("Note: Only defined users succeed registration"));
+                .body("error", equalTo("Note: Only defined users succeed registration"));
     }
 
     String postDataTemplate = """
@@ -97,7 +97,7 @@ public class ReqresTests {
     @Test
     @DisplayName("Verify user with valid data can be successfully created")
     void userSuccessfulCreationTest() {
-        String postData = String.format(postDataTemplate,"morpheus","leader");
+        String postData = String.format(postDataTemplate, "morpheus", "leader");
 
         given()
                 .body(postData)

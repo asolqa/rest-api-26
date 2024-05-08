@@ -1,4 +1,5 @@
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -6,8 +7,8 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static io.restassured.http.ContentType.JSON;
 
-
-@DisplayName("Training API tests on regres.com")
+@Disabled("Left here just to compare with improved version of the test suite")
+@DisplayName("Old version of the test suite (disabled for a reason)")
 public class ReqresTests {
 
     @Test

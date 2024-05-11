@@ -6,12 +6,14 @@ import org.junit.jupiter.api.Test;
 
 
 import static io.qameta.allure.Allure.step;
-import static org.junit.jupiter.api.Assertions.*;
-import static specs.RegistrationEndpointSpecification.registrationEndpoint;
-import static specs.RegistrationEndpointSpecification.registrationNotAllowed;
-import static specs.UnknownEndpointSpecification.unknownEndpoint;
-import static specs.CommonSpecifications.successfulResponse;
-import static specs.UsersEndpointSpecification.*;
+import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
+import static specs.Specifications.requestSpec;
+import static specs.Specifications.responseWithBadRequest400Code;
+import static specs.Specifications.responseWithCreated201Code;
+import static specs.Specifications.responseWithNoContent204Code;
+import static specs.Specifications.responseWithNotFound404Code;
+import static specs.Specifications.successfulResponse200Code;
 
 @SuppressWarnings("SpellCheckingInspection")
 @DisplayName("API tests on regres.in")
@@ -19,7 +21,8 @@ class ReqresImprovedTest {
 
     @BeforeAll
     static void setUpConfig() {
-        step("Set Base URI", () -> RestAssured.baseURI = "https://reqres.in/api");
+        step("Set Base URI", () -> RestAssured.baseURI = "https://reqres.in");
+        step("Set Base Path", () -> RestAssured.basePath = "/api");
     }
 
     @Test
@@ -27,18 +30,18 @@ class ReqresImprovedTest {
     void userSuccessfullyFoundByIDTest() {
         UsersResponse response =
                 step("Make Request", () ->
-                        usersEndpoint()
+                        given(requestSpec())
                                 .when()
-                                .get("/{id}", 3)
+                                .get("/users/{id}", 3)
                                 .then()
-                                .spec(successfulResponse())
+                                .spec(successfulResponse200Code())
                                 .and().extract().as(UsersResponse.class)
                 );
 
 
         step("Check Response", () -> {
-                    assertEquals(3, response.getData().getId());
-                    assertEquals("emma.wong@reqres.in", response.getData().getEmail());
+                    assertThat(response.getData().getId()).isEqualTo(3);
+                    assertThat(response.getData().getEmail()).isEqualTo("emma.wong@reqres.in");
                 }
         );
     }
@@ -48,17 +51,17 @@ class ReqresImprovedTest {
     void userNotFoundByIDTest() {
         UsersResponse response =
                 step("Make Request", () ->
-                        usersEndpoint()
+                        given(requestSpec())
                                 .when()
-                                .get("/{id}", 25)
+                                .get("/users/{id}", 25)
                                 .then()
-                                .spec(nonexistentUserResponse())
+                                .spec(responseWithNotFound404Code())
                                 .and().extract().as(UsersResponse.class)
                 );
 
         step("Check Response", () -> {
-                    assertNull(response.getData());
-                    assertNull(response.getSupport());
+                    assertThat(response.getData()).isNull();
+                    assertThat(response.getSupport()).isNull();
                 }
         );
     }
@@ -69,21 +72,21 @@ class ReqresImprovedTest {
     void pantoneDataTest() {
         UnknownResponse response =
                 step("Make Request", () ->
-                        unknownEndpoint()
+                        given(requestSpec())
                                 .when()
-                                .get()
+                                .get("/uknown")
                                 .then()
-                                .spec(successfulResponse())
+                                .spec(successfulResponse200Code())
                                 .and().extract().as(UnknownResponse.class)
                 );
 
 
         step("Check Response", () -> {
-                    assertEquals(6, response.getData().size());
+                    assertThat(response.getData()).hasSize(6);
 
                     ColorInformation lastItem = response.getData().get(5);
-                    assertEquals("blue turquoise", lastItem.getName());
-                    assertEquals(2005, lastItem.getYear());
+                    assertThat(lastItem.getName()).isEqualTo("blue turquoise");
+                    assertThat(lastItem.getYear()).isEqualTo(2005);
                 }
         );
     }
@@ -95,17 +98,17 @@ class ReqresImprovedTest {
 
         RegistrationError response =
                 step("Make Request", () ->
-                        registrationEndpoint()
+                        given(requestSpec())
                                 .when()
                                 .body(registrationData)
-                                .post()
+                                .post("/register")
                                 .then()
-                                .spec(registrationNotAllowed())
+                                .spec(responseWithBadRequest400Code())
                                 .and().extract().as(RegistrationError.class)
                 );
 
         step("Check Response",
-                () -> assertEquals("Note: Only defined users succeed registration", response.getError())
+                () -> assertThat(response.getError()).contains("Note: Only defined users succeed registration")
         );
     }
 
@@ -116,20 +119,21 @@ class ReqresImprovedTest {
 
         UserCreationResponse response =
                 step("Make Request", () ->
-                        usersEndpoint()
+                        given(requestSpec())
                                 .when()
                                 .body(postData)
-                                .post("/").then()
-                                .spec(userCreated())
+                                .post("/users")
+                                .then()
+                                .spec(responseWithCreated201Code())
                                 .and().extract().as(UserCreationResponse.class)
                 );
 
 
         step("Check Response", () -> {
-                    assertEquals("morpheus", response.getName());
-                    assertEquals("leader", response.getJob());
-                    assertNotNull(response.getId());
-                    assertNotNull(response.getCreatedAt());
+                    assertThat(response.getName()).isEqualTo("morpheus");
+                    assertThat(response.getJob()).isEqualTo("leader");
+                    assertThat(response.getId()).isNotNull();
+                    assertThat(response.getCreatedAt()).isNotNull();
                 }
         );
     }
@@ -139,15 +143,15 @@ class ReqresImprovedTest {
     void userCorruptedDataPatchTest() {
         String response =
                 step("Make Request", () ->
-                        usersEndpoint()
+                        given(requestSpec())
                                 .when()
                                 .body("fff")
                                 .patch("/{id}", 2)
                                 .then()
-                                .spec(badRequestResponse()).extract().asString()
+                                .spec(responseWithBadRequest400Code()).extract().asString()
                 );
 
-        step("Check Response", () -> assertTrue(response.contains("<title>Error</title>")));
+        step("Check Response", () -> assertThat(response).contains("<title>Error</title>"));
     }
 
     @Test
@@ -155,14 +159,14 @@ class ReqresImprovedTest {
     void userSuccessfulDeletionTest() {
         String response =
                 step("Make Request", () ->
-                        usersEndpoint()
+                        given(requestSpec())
                                 .when()
                                 .delete("/{id}", 2)
                                 .then()
-                                .spec(userDeletionResponse()).extract().asString()
+                                .spec(responseWithNoContent204Code()).extract().asString()
                 );
 
-        step("Check Response", () -> assertTrue(response.isEmpty()));
+        step("Check Response", () -> assertThat(response).isEmpty());
     }
 
 }

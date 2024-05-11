@@ -1,7 +1,6 @@
 package specs;
 
 import io.restassured.builder.ResponseSpecBuilder;
-import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 
@@ -11,47 +10,52 @@ import static io.restassured.filter.log.LogDetail.BODY;
 import static io.restassured.filter.log.LogDetail.STATUS;
 import static io.restassured.http.ContentType.JSON;
 
-public class UsersEndpointSpecification {
+public class Specifications {
 
-    public static RequestSpecification usersEndpoint() {
-        return with()
+    public static RequestSpecification requestSpec() {
+       return with()
                 .filter(withCustomTemplates())
                 .log().uri()
                 .log().body()
                 .log().headers()
-                .contentType(JSON)
-                .basePath("/users");
+                .contentType(JSON);
     }
 
-
-    public static ResponseSpecification userDeletionResponse() {
+    public static ResponseSpecification successfulResponse200Code() {
         return new ResponseSpecBuilder()
-            .expectStatusCode(204)
-            .log(STATUS)
-            .log(BODY)
-            .build();
-    }
-
-    public static ResponseSpecification nonexistentUserResponse() {
-        return new ResponseSpecBuilder()
-                .expectStatusCode(404)
+                .expectStatusCode(200)
                 .log(STATUS)
                 .log(BODY)
                 .build();
     }
 
-    public static ResponseSpecification badRequestResponse() {
+    public static ResponseSpecification responseWithBadRequest400Code() {
         return new ResponseSpecBuilder()
                 .expectStatusCode(400)
                 .log(STATUS)
                 .log(BODY)
-                .expectContentType(ContentType.HTML)
                 .build();
     }
 
-    public static ResponseSpecification userCreated() {
+    public static ResponseSpecification responseWithNoContent204Code() {
+        return new ResponseSpecBuilder()
+                .expectStatusCode(204)
+                .log(STATUS)
+                .log(BODY)
+                .build();
+    }
+
+    public static ResponseSpecification responseWithCreated201Code() {
         return new ResponseSpecBuilder()
                 .expectStatusCode(201)
+                .log(STATUS)
+                .log(BODY)
+                .build();
+    }
+
+    public static ResponseSpecification responseWithNotFound404Code() {
+        return new ResponseSpecBuilder()
+                .expectStatusCode(404)
                 .log(STATUS)
                 .log(BODY)
                 .build();
